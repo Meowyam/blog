@@ -1,0 +1,72 @@
+---
+layout: post
+title: Tumblr Tag Cloud Tutorial
+date: '2017-12-31T21:46:26+08:00'
+tags:
+- tutorial
+- coding
+- tumblr
+- tumblr tags
+- tagcloud
+- javascript
+---
+<p> I wanted a tag cloud for my personal Tumblr but couldn’t find a good one. There seem to be three main options: <a href="https://heatherrivers.com/tumblr-tag-clouds">Heather Rivers’</a> which didn’t load for me, <a href="https://drunkonschadenfreude.tumblr.com/post/163996260209/tag-list-tag-cloud-generator-for-tumblr">drunkonschadenfreude’s</a> which doesn’t link to your tag pages, and <a href="http://www.pearltrees.com/u/34524571-pretty-cloud-generator-tumblr">Pearl Trees’</a>, but you have to join them to use it. The tutorials I found mostly revolve around using jQuery or <a href="https://www.sitepoint.com/a-better-tag-cloud-for-tumblr/">require you to host your own Tumblr blog and use PHP or whatever</a>, so I ended up writing my own little script.</p><p>I was so happy with it I made a <a href="http://pandashop.co.uk/tumblrtag/">tag cloud generator</a> you can use. The generator is pretty self explanatory. I figured the easiest way to use it would be to stick your blog name and <a href="https://www.tumblr.com/oauth/apps">API Key</a> in a form, and there’s some basic customisation for sorting, the minimum tag frequency you want to include in your tag cloud, etc. You essentially copy and paste the code for the generated tag cloud into your page. I’ve put mine in the sidebar. </p><p>However it might not be quite perfect for everyone, so I decided to write a little tutorial so you could stick the code in your own blog and customise it for your own use.</p><!-- more --><p>The code is <a href="https://gist.github.com/Meowyam/5a5a5bcd04dc21f2dcc038292d835068">simple and pretty self explanatory</a>, and you can really just copy it and replace the capitalised text with the correct values for you.</p><p>What annoyed me about many of the guides/tutorials on the internet that tell you how to make a Tumblr tag cloud is that they tend to use jQuery.. Here I use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a> to fetch your blog posts, which is really easy and straightforward.</p><p><code>fetch('https://api.tumblr.com/v2/blog/<b>YOURTUMBLRNAME</b>.tumblr.com/posts?api_key=<b>YOURTUMBLRAPIKEY</b>').then(response =&gt;{  <br/></code></p><figure data-orig-width="480" data-orig-height="270" class="tmblr-full"><img src="https://66.media.tumblr.com/1953ff7c631db04b58ed8d2f11a40e80/tumblr_inline_p1tzko1hDR1u97uaj_540.gif" alt="image" data-orig-width="480" data-orig-height="270"/></figure><p>&hellip;and now you can probably also see why I’ve made it so you copy and paste the generated HTML on the <a href="http://pandashop.co.uk/tumblrtag">Tag Cloud Generator</a> instead of the javascript itself - your Tumblr API Key is exposed. I assume that you don’t host your own Tumblr blog and just want to casually stick some code in it. What you can do if you don’t want to keep going to the <a href="http://pandashop.co.uk/tumblrtag">Tag Cloud Generator</a> is <a href="https://gist.github.com/Meowyam/b6cd858ae4aeae551b260086e3397ed9">set up a basic HTML file like this</a> on your laptop or phone or whatever and just run it whenever you need to update your tag cloud. Also remember that Tumblr’s imposed a rate limit, so you probably don’t want to just stick the javascript on your page anyway.</p><p>Anyway.</p><p>After it fetches your blog posts and all is good&hellip;</p><p><i>not good</i></p><p>
+<code>
+if (response.status != 200) {
+  console.log('error', response.status)
+  return
+}
+</code>
+
+<br/></p><p><i>good</i></p><p>
+<code>
+response.json().then(function(data) {
+  const {posts} = data.response
+</code>
+</p><p>&hellip;it goes through all your posts and pushes all of your tags into a giant array allTags&hellip;</p><p>
+
+<code>
+const allTags = []
+
+posts.forEach(function (post, index) {
+  allTags.push(...post.tags)
+})
+</code><br/></p><p>&hellip;and then counts all the <b>unique </b>tags.</p><p>
+<code>
+const tagCount = allTags.reduce((acc, tag) =&gt; {
+  acc[tag] = (acc[tag] || 0)+1
+  return acc
+}, {})
+</code>
+</p><p>Then it sorts your tags, in this case in descending order, but at this point you can sort it in other ways too: in ascending order, randomly, alphabetically, etc.</p><p>
+<code>
+const sortedTags = Object.keys(tagCount)
+.map((key) =&gt; [key, tagCount[key]])
+.sort((a,b) =&gt; b[1]-a[1])
+</code>
+</p><p>This point is probably where you’ll want to customise the most. The tag list is filtered to show only the tags above a minimum number of posts (replace <b>MINIMUMENTRIES </b>with the number you want), but you can also filter it to exclude tags with certain values (eg. if all your text-based posts are tagged as ‘text’ and that isn’t a useful tag for your readers, you can filter out value[0] == ‘text’). </p><p>
+
+<code>
+let fontsize
+const tagList = sortedTags
+.filter(value =&gt; value[1] &gt; <b>MINIMUMENTRIES</b>)
+</code>
+</p><p>A common feature of tag clouds is that tags that recur more are often in a bigger, bolder font. I’ve split my own tags into three groups and applied different classes on each: a default ‘middle’ group with an average font size, infrequent tags in a small font and the most used tags in the largest font. Replace <b>UPPERLIMIT </b>and <b>LOWERLIMIT </b>with the values you want, or split the tags into more groups. Then style the classes with css.</p><p>
+
+<code>
+.map(value =&gt; {
+  if (value[1] &gt; <b>UPPERLIMIT</b>) { fontsize = 'font3' } 
+  else if (value[1] &lt; <b>LOWERLIMIT</b>) { fontsize = 'font1' }
+  else { fontsize = 'font2' }
+</code></p><p>The tag list is then returned as a list, which you can style. I’ve gone for a cluster of tags without line breaks in between each list item.</p><p>
+
+<code>
+return '&lt;li&gt;&lt;a href=http://YOURTUMBLRNAME.tumblr.com/tagged/'+value[0]+' class='+fontsize+'&gt;'+value[0]+' ['+value[1]+']&lt;/a&gt;&lt;/li&gt;'
+}) </code></p><p>Last of all, the tag cloud is wrapped up in an unordered list in a div with the ID tagcloud, and gets written into a div (’#generatedTags’ in this example), but obviously you can write it into whatever div you want, and you could have an ordered list too.</p><p><code>
+      document.getElementById('generatedTags').innerHTML = &lt;div id=tagcloud&gt;&lt;ul&gt;"+tagList.join(' ')+"&lt;/ul&gt;&lt;/div&gt;"
+    })
+  })
+}
+</code></p><p>Don’t forget to call the script!
+</p><p>As you can see in this tutorial the Tumblr API is pretty easy to use. If you have a look at <a href="https://www.tumblr.com/docs/en/api/v2">the Tumblr API docs</a>, you’ll see it’s pretty easy to branch off this tag cloud generator example and pimp your blog in other ways with data from the Tumblr API.</p><p>Have fun! Feel free to ask me any questions you might have.</p>
+<p><b><a href="http://pandashop.co.uk/tumblrtag/">Generate your tumblr tags here!</a></b></p>

@@ -1,0 +1,23 @@
+---
+layout: post
+title: Averaging Colours
+date: '2018-11-03T18:09:49+08:00'
+tags: []
+---
+<p>I’m currently working on a project which needs me to get the mean average of different colours. I tried different ways of getting the average from rgb/hex and hsl.<br/></p><p>My initial reaction was to add up each of the rgb values and divide by number of colours. However this is not strictly correct: the value of each pixel of color is stored as the square root of the value, and our monitors display it as the square of that value. See <a href="https://sighack.com/post/averaging-rgb-colors-the-right-way">this post</a>, and <a href="https://www.reddit.com/r/programming/comments/31g0xu/computer_color_is_broken/">reddit discussion</a>.</p><p>So the average value would more accurately be the sum of the square of each of the r,g,b values divided by the number of colours.</p><p><br/>But what if I used hsl values instead of hex or rgb? Simply adding the two hue values together to get the average gives an incorrect value as hue is, in short, a point in a colour wheel. Each hue needs to be <a href="https://en.wikipedia.org/wiki/Mean_of_circular_quantities#Mean_of_angles">converted to cartesian coordinates, take the mean, and get the arctangent</a>. The saturation and lightness/luminosity are percentages, so their average can be simply obtained.</p><p>I found that taking the average of the hue gives a colour that’s different to taking the average of the rgb.</p><p>Adding these two colours:</p><p> <i class="fas fa-heart" style="color: #E4B210"></i> + <i class="fas fa-heart" style="color: #E40429"></i></p>
+<p>Gives you:</p>
+<p>with RGB/hex, without squaring:</p>
+<p><i class="fas fa-heart fa-5x" style="color: #e45b1c"></i></p>
+<p>with RGB/hex, with squaring:</p>
+<p><i class="fas fa-heart fa-5x" style="color: #e47d1f"></i></p>
+<p>with HSL:</p>
+<p><i class="fas fa-heart fa-5x" style="color: #e14709"></i></p>
+<p>
+As you can see the HSL average (taken by calculating the mean of circular quantities), is closer to the &lsquo;incorrect&rsquo; mean of RGB/hex, without taking the square of each r,g,b component. For this reason I decided against using HSL (also it&rsquo;s less common for web).
+</p>
+<p>
+Another issue I had is that the more colours were added together, the more it averaged out to a sort of brownish shade. It made more visual sense to choose two colours (eg. red and yellow) so each result can be represented on a red-yellow gradient, rather than as a shade of brown.
+</p>
+<p>
+For reference, <a href="http://pandashop.co.uk/colour/colour.html">see this page with colours and formulas used</a>.
+</p>
