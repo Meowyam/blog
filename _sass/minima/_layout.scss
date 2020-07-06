@@ -12,11 +12,11 @@
 
 .site-title {
   @include media-query($on-palm) {
-    @include relative-font-size(1.6);
+    @include relative-font-size(3);
   }
 
   @include media-query($on-laptop) {
-    @include relative-font-size(3);
+    @include relative-font-size(1.6);
   }
 
   font-weight: 300;
