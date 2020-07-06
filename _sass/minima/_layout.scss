@@ -56,6 +56,10 @@
     border-radius: 5px;
     text-align: right;
 
+    .site-title {
+      @include relative-font-size(1.6);
+    }
+
     label[for="nav-trigger"] {
       display: block;
       float: right;
