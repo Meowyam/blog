@@ -1,0 +1,202 @@
+---
+layout: post
+title:  "Pascal Quotes with Inkyphat and Raspberry Pi"
+date:   2020-07-07 17:05:49 +0800
+categories: raspberry pi, inkyphat, animal crossin
+---
+
+Hi! I'm going to show you how to use Inkyphat and the Raspberry Pi to display tweets.
+
+I love Animal Crossing and my favourite character is Pascal the otter.
+
+![picture of Pascal from Animal Crossing New Horizons saying: Yep. Today is a good day.](http://pandashop.co.uk/blogmedia/scallop.jpg)
+
+To celebrate the July update that adds Pascal to New Horizons, I decided to use my Inkyphat to display Pascal quotes.
+
+![pascal quote shown on a raspberry pi](http://pandashop.co.uk/blogmedia/pascalpi.gif)
+
+Everything you need is on [the github repo](https://github.com/Meowyam/pascalquotes), including the picture of Pascal and [Roboto font](https://fonts.google.com/specimen/Roboto?sidebar.open&selection.family=Roboto).
+
+There's some set up needed, which I'll explain below. For this, I'll assume that you've already got a raspberry pi set up ([see headless setup here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)) and [Inkyphat installed](https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-inky-phat).
+
+__Explanation: quotes__
+
+[This python script](https://github.com/Meowyam/pascalquotes/blob/master/pascal.py) will take any text file (doesn't have to end with .txt), grab each line, and randomly choose one to display on the Inkyphat.
+
+    quotes = open(DIR_PATH + "/allQuotes.txt", "r")
+
+You can save any list of quotes that you have, and edit to replace it with your relevant filename.
+
+_How I got a list of Pascal's quotes_
+
+I essentially harvested them from [a Twitter account called PascalCrossing](https://twitter.com/pascalcrossing), a bot that tweets a quote from Pascal every 3 hours. I used the [GetOldTweets3](https://pypi.org/project/GetOldTweets3/) library, which makes it easy.
+
+On your raspberry pi you'll need to install this with pip3:
+
+    pip3 install getOldTweets3
+
+and then run it with python3:
+
+    python3 getOldTweets3
+
+python3 should already be installed on raspberry pi with raspbian, but not the default.
+
+and then just run
+
+    python3 getQuotes.py
+
+and it will generate an allQuotes.txt (or however you've named your quotes file)
+
+![screenshot of code illustrating how to install getOldTweets3](http://pandashop.co.uk/blogmedia/pascalpishot1.png)
+
+_If you want to pull some other tweets]_
+
+At the top of getQuotes.py, replace PascalCrossing with the Twitter username of your choice:
+
+   tweetCriteria = got.manager.TweetCriteria().setUsername("PascalCrossing")\
+                                           .setTopTweets(True)\
+                                           .setMaxTweets(100)
+
+It will get the most recent top 100 tweets from your user.
+Please see the [getOldTweets3](https://pypi.org/project/GetOldTweets3/) library if you want to grab tweets using some other criteria.
+
+Below,you'll see some punctuation related code:
+
+   wrong_punc = ['’', '‘', '…', '—']
+
+...etc. This is because the tweet punctuation can be funky when grabbed and saved to a text file, and may not render well in all fonts. But it should now, let me know if you come across some other funky punctuation or emoticons or whatever that don't render well in your Inkyphat.
+
+_Why didn't I set it to pull tweets constantly from the internet?_
+
+This is because my raspberry pi isn't always connected to a power source or the internet. This way, you will have a quotes file of a hundred quotes that you can update whenever you want.
+
+
+_Important!!_
+
+getQuotes.py doesn't overwrite the quotes already present in your file of quotes, it just sticks on the new quotes below. If you do want to overwrite your current quotes file, you can delete allQuotes.txt (or whatever your generated quotes filename is) before running getQuotes again.
+Alternatively, you can overwrite your current quotes:
+
+under:
+
+    quoteFile = open("allQuotes.txt", "a")
+
+add:
+    quoteFile.seek(0)
+
+this will move to the top of tile file,
+and then it'll carry out the writing of the tweets.
+
+and then before
+    
+    quoteFile.close()
+
+insert:
+
+    quoteFile.truncate()
+
+this will truncate everything below what you've just written, ie. your old quotes.
+
+
+__So now you have a text file of Quotes__
+
+If you're happy with everything and what you desire is Pascal quotes, you can skip this section.
+
+The background picture is Pascal, rendered for the red Inkyphat.
+
+    img = Image.open(DIR_PATH + "/pascal.png")
+
+If you:
+
+_don't want any picture_
+
+replace the picture with what is essentially a blank picture that covers the entire Inkyphat and is overwritten.
+
+    img = Image.new("P", inky_display.WIDTH, inky_display.HEIGHT)
+
+lower down you will see x and y values. These determine the starting position for your text.
+
+    x = 65
+    y = 5
+
+so the text starts 65px from the left of the screen, and 5px from the top. This is because the picture of Pascal is about 65px wide. If you have no picture, you will want to change it to
+
+   x = 5
+
+Assuming a 5px border from the top, or x=0 y=0 if you want to start the text flush from the beginning, etc.
+
+_I want my own picture_
+
+You can replace Pascal with your own picture by simply replacing 'pascal.png' with your filename.
+Remember that it should be in the Inkyphat color palette ([download palette for GIMP here](https://raw.githubusercontent.com/pimoroni/inky-phat/master/tools/Inky-pHAT.gpl)) and they should be PNG-8 images that are 212 by 104 px.
+
+And then change the x and y values for the textbox to fit your picture, as above.
+
+If you:
+
+_want to change the font_
+
+Easy.
+
+    font = ImageFont.truetype(DIR_PATH + "/roboto.ttf", 14)
+
+Replace with your font file. There are some default fonts, like FredokaOne. If you're using your own font, remember to save it to the right folder (or point your path correctly).
+
+__So now you've got it set up__
+
+You can try running it. If you type ./pascal.py, it should work.
+
+![An Inkyphat displaying a Pascal quote](http://pandashop.co.uk/blogmedia/pascalbears.jpg)
+
+However you don't want to keep reconnecting to your pi and running the script. The cool thing about the Inkyphat is you can take it around with you. I personally put mine in a [pibow case](https://learn.pimoroni.com/tutorial/sandyj/pibow-zero-assembly) and attached cable ties and a clasp loop from a wristlet, and I use it as a bag charm. The image on the Inkyphat lasts for days.
+
+I've set mine up so that it will refresh and grab a new quote from my list of quotes every time I turn it on (ie. connect it to a power source, like a laptop or battery pack). While it's turned on, it'll refresh every 30 minutes. I do this with cron.
+
+![screenshot illustrating script in crontab, the script is described below in text](http://pandashop.co.uk/blogmedia/pascalpishotcron.png)
+
+If you're not familiar with it, cron is used to schedule programs to run at specific times. So you can set it to automatically run your python scripts on your raspberry pi. 
+
+_To run the script on reboot_
+
+open up crontab on your raspberry pi by typing this in the command line:
+
+    crontab -e
+
+Then after all the hashtags, directly below this line:
+
+    # m h  dom mon dow    command
+
+Add this line:
+
+    @reboot PATH/pascal.py
+
+where PATH is the full path of the directory that you saved the pascal.py file to in your raspberry pi.
+
+_but how do I find the full path of my file?_
+
+do this:
+
+    readlink -f pascal.py
+
+You can copy and paste the output into so your cron will have the full path.
+
+So that will run the python script every time you reboot your pi.
+
+You can check that it has been added to your cron by typing
+
+    crontab -l
+
+which will list all your cron jobs.
+
+_To run the script every 30 minutes_
+
+Open up crontab again the same way, and add this line at the bottom:
+
+    */30 * * * * PATH/pascal.py
+
+This means pascal.py will run every 30 minutes. You can set your own time intervals/timings. If you're not sure you can check on [crontab guru](https://crontab.guru/).
+
+There are [other ways to set up a program to run on your pi](https://www.dexterindustries.com/howto/run-a-program-on-your-raspberry-pi-at-startup/), but I've chosen cron because I'm comfortable with it and imo it's the easiest.
+
+__Congratulations!! You can now carry Pascal's wisdom with you wherever you go, no scallops necessary!__
+
+![image of inkyphat with a pascal quote hung from a bag like a bag charm](http://pandashop.co.uk/blogmedia/pascalbagcharm.jpg)
